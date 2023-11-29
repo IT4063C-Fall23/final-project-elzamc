@@ -28,17 +28,20 @@
 # *What 3 data sources have you identified for this project?*
 # *How are you going to relate these datasets?*
 # 📝 <!-- Answer Below -->
+#     'https://www.kaggle.com/osmi/mental-health-in-tech-survey',
+#     'https://www.kaggle.com/datasets/reenapinto/mental-health-care?select=Mental_Health_Care_in_the_Last_4_Weeks.csv',
+#     'https://www.kaggle.com/datasets/jeevanaduwarahan/student-mental-health',
+#     'https://www.kaggle.com/datasets/kashishnaqvi/suicidal-behaviours-among-adolescents'
 # 
 # 
-# 
-# These datasets will help answer the question of the prominence of mental health.
+# These datasets will help answer the question of the prominence of mental health and how it should be looked into more in several areas.
 
 # ## Approach and Analysis
 # *What is your approach to answering your project question?*
 # *How will you use the identified data to answer your project question?*
 # 📝 <!-- Start Discussing the project here; you can add as many code cells as you need -->
 # 
-# My approach is simple. The Kaggle datasets provide huge insights on a global and smaller scale. This includes a bunch of different angles too, like in tech, a more global scale, and social media.
+# My approach is simple. The Kaggle datasets provide huge insights on a global and smaller scale. This includes a bunch of different angles too, like in tech, students, adolescents, etc.
 
 # In[6]:
 
@@ -62,7 +65,7 @@ mpl.rc('ytick', labelsize=12)
 plt.style.use("bmh")
 
 
-# In[27]:
+# In[90]:
 
 
 import opendatasets as od
@@ -72,7 +75,9 @@ import pandas as pd
 datasets = [
     'https://www.kaggle.com/osmi/mental-health-in-tech-survey',
     'https://www.kaggle.com/datasets/reenapinto/mental-health-care?select=Mental_Health_Care_in_the_Last_4_Weeks.csv',
-    'https://www.kaggle.com/datasets/jeevanaduwarahan/student-mental-health'
+    'https://www.kaggle.com/datasets/jeevanaduwarahan/student-mental-health',
+    'https://www.kaggle.com/datasets/kashishnaqvi/suicidal-behaviours-among-adolescents',
+    'https://www.kaggle.com/datasets/souvikahmed071/social-media-and-mental-health'
 ]
 
 # Download datasets using opendatasets
@@ -83,7 +88,8 @@ for dataset_url in datasets:
 health_in_tech = pd.read_csv('mental-health-in-tech-survey/survey.csv')
 us_mental_health_care = pd.read_csv('mental-health-care/Mental_Health_Care_in_the_Last_4_Weeks.csv')
 student_mental_health = pd.read_csv('student-mental-health/Student Mental health.csv')
-
+suicidal_behaviors = pd.read_csv('suicidal-behaviours-among-adolescents/GHSH_Pooled_Data1.csv')
+health_in_social_media = pd.read_csv('social-media-and-mental-health/smmh.csv')
 
 # Print the first few rows of each data frame
 print(health_in_tech.head())
@@ -205,6 +211,142 @@ plt.title('Presence of Panic Attacks among Students')
 plt.show()
 
 
+# In[50]:
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+data = suicidal_behaviors
+
+# Selecting columns for correlation analysis
+selected_columns = ['Currently_Drink_Alcohol', 'Really_Get_Drunk', 'Overwieght', 'Use_Marijuana',
+                    'Have_Understanding_Parents', 'Missed_classes_without_permssion', 'Had_sexual_relation',
+                    'Smoke_cig_currently', 'Had_fights', 'Bullied', 'Got_Seriously_injured',
+                    'No_close_friends', 'Attempted_suicide']
+
+# Filter the data with selected columns
+selected_data = data[selected_columns]
+
+# Compute the correlation matrix
+correlation_matrix = selected_data.corr()
+
+# Visualization 2: Correlation Heatmap
+plt.figure(figsize=(12, 10))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap of Selected Adolescent Behaviors')
+plt.show()
+
+
+# In[49]:
+
+
+data = suicidal_behaviors
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Age Group', y='Attempted_suicide', data=data)
+plt.title('Attempted Suicide by Age Group')
+plt.xlabel('Age Group')
+plt.ylabel('Attempted Suicide (%)')
+plt.show()
+
+
+# In[113]:
+
+
+# Extracting columns for time spent on social media and mental health consequence
+time_mental_health = health_in_social_media[['"8. What is the average time you spend on social media every day?"', '"18. How often do you feel depressed or down?"']]
+time_mental_health.columns = ['Time Spent on Social Media', 'Mental Health Consequence']
+
+# Converting time spent on social media to numeric
+time_mental_health['Time Spent on Social Media'] = time_mental_health['Time Spent on Social Media'].str.extract(r'(\d+)').astype(float)
+
+# Plotting the box plot
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Mental Health Consequence', y='Time Spent on Social Media', data=time_mental_health.dropna(), palette='viridis')
+plt.xlabel('Mental Health Consequence')
+plt.ylabel('Time Spent on Social Media')
+plt.title('Box Plot of Time Spent on Social Media vs. Mental Health Consequence')
+plt.show()
+
+
+# In[151]:
+
+
+plt.figure(figsize=(10, 6))
+sns.lineplot(x='"1. What is your age?"', y='"10. How often do you get distracted by Social media when you are busy doing something?"', data=health_in_social_media)
+plt.xlabel('Age')
+plt.ylabel('Frequency of Distraction by Social Media')
+plt.title('Age vs. Frequency of Distraction by Social Media')
+plt.show()
+
+
+# In[89]:
+
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load the dataset
+data = health_in_tech
+
+# Selecting features and target variable
+features = ["Age", "Gender", "Country", "self_employed", "family_history", "treatment", "work_interfere", 
+            "no_employees", "remote_work", "tech_company", "benefits", "care_options", "wellness_program", 
+            "seek_help", "anonymity", "leave", "mental_health_consequence", "phys_health_consequence", 
+            "coworkers", "supervisor", "mental_health_interview", "phys_health_interview", 
+            "mental_vs_physical", "obs_consequence"]
+
+target = "Age"  # Replace 'comments' with the actual target variable you want to predict
+
+# Filtering features and target variable
+data_filtered = data[features + [target]]
+
+# Splitting the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(data_filtered.drop(target, axis=1), 
+                                                    data_filtered[target], 
+                                                    test_size=0.2, random_state=42)
+
+# Preprocessing categorical features and handling missing values
+categorical_features = X_train.select_dtypes(include=['object']).columns.tolist()
+numeric_features = X_train.select_dtypes(include=['int64', 'float64']).columns.tolist()
+
+numeric_transformer = SimpleImputer(strategy='mean')
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# Creating the linear regression model pipeline
+lr_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+                              ('regressor', LinearRegression())])
+
+# Training the model
+lr_pipeline.fit(X_train, y_train)
+
+# Predicting on the test set
+y_pred = lr_pipeline.predict(X_test)
+
+# Evaluating the model
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse}")
+print(f"R-squared Score: {r2}")
+
+
 # ## Resources and References
 # *What resources and references have you used for this project?*
 # 📝 <!-- Answer Below -->
@@ -229,20 +371,21 @@ plt.show()
 # Done for a similar reason as above. This shows how panic attacks probably tie into depression, and again, close to 1/3.
 
 # What insights and interesting information are you able to extract at this stage?
-# 
+# Pretty much relations with age/gender/location with mental health.
 # What are the distributions of my variables?
-# 
+# Very interesting, they seem to line in with eachother even across different datasets.
 # Are there any correlations between my variables?
-# 
+# Yes! Several. Mainly between gender and age.
 # What issues can you see in your data at this point?
-# 
+# Not much.
 # Are there any outliers or anomalies? are they relevant to your analysis? or should they be removed?
-# 
+# From what I can tell no, data seems pretty consistent with eachother.
 # Are there any missing values? how are you going to deal with them?
-# 
+# No.
 # Are there any duplicate values? how are you going to deal with them?
-# 
+# No.
 # Are there any data types that need to be changed?
+# I had to go through different sets of data, but other than that no.
 
 # Missing values
 # Duplicate values
@@ -250,8 +393,31 @@ plt.show()
 # Data types transformation.
 # You will need to describe the data cleaning process you went through to prepare your data for analysis. This includes your code and the reasoning behind your decisions:
 # 
+# So mainly the trouble I ran into was data not being able to be read for some reason. The columns were frequently not aligned and python was therefore not able to interact with the data. There was also some innapropriate joke answers on some data .csvs that had to be removed. A lot of this could be done manually as the data was so small from some. There werent many outliers from the data I pulled, except a few on the tech one which I removed.
+# 
 
-# In[ ]:
+# Machine Learning Plan and Process:
+# 
+# What type of machine learning model are you planning to use?
+# Logistic Regression.
+# 
+# What are the challenges have you identified/are you anticipating in building your machine learning model? How are you planning to address these challenges?
+# Even though I only need one, I think the process is something that will take me the longest out of everything here. Mainly because of my inexperience, but I will look back on the assignment focusing on it to fully complete this one.
+# 
+# Ask: Can we predict the severity of depressive symptoms based on various factors such as age, gender, lifestyle habits, and social interactions?
+# Prepare: Select relevant features such as age, gender, exercise habits, social interaction frequency from a dataset(s). Using a stratified split. This split makes it more balanced and consistent with a more realistic estimation in prediction.
+# Process: Explore the dataset to identify missing values, outliers, and potential biases using scikit-learn.
+# Analyze: Utilize linear regression as a baseline model to predict the severity of depressive symptoms based on selected features. Fit the model to the training data and analyze the coefficients to understand feature importance and their impact on mental health prediction.
+# Evaluate: Assess the performance of the linear regression model using appropriate metrics.
+# Share: Emphasize the need for further research and the importance of considering multiple factors in mental health prediction models.
+# 
+# Prior Feedback and Updates
+# What feedback did you receive from your peers and/or the teaching team?
+# I had 6 data sets at the time which was praused and he reminded me to do the !jupyter convert.
+# What changes have you made to your project based on this feedback?
+# I made sure to do the convert. Woops!
+
+# In[33]:
 
 
 # ⚠️ Make sure you run this cell at the end of your notebook before every submission!
