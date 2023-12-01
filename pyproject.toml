@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "final-project-elzamc"
+version = "0.1.0"
+description = ""
+authors = ["elzamc <elzamc@mail.uc.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+ipykernel = "^6.25.1"
+black = "^23.7.0"
+numpy = "^1.25.2"
+pandas = "^2.1.0"
+testbook = "^0.4.2"
+pytest = "^7.4.0"
+jupyter = "^1.0.0"
+scikit-learn = "^1.3.2"
+plotly = "^5.18.0"
+notebook = "^7.0.6"
+scipy = {version = "^1.11.3", python = "<3.13,>=3.9"}
+seaborn = "^0.13.0"
+matplotlib = "^3.8.0"
+opendatasets = "^0.1.22"
+geopandas = "^0.14.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
